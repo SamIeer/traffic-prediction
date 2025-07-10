@@ -80,7 +80,8 @@ An interactive UI for users to:
 
 
 ---
-```### Installation setup 
+## Installation setup 
+```
 # 1. Clone the repository
 git clone https://github.com/SamIeer/traffic-prediction.git
 cd traffic-prediction
