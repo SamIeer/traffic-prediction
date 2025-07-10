@@ -21,9 +21,9 @@ All GTFS `.txt` files were processed using pandas in a Jupyter notebook:
 4. **Extracted time features**: hour of day, service type (`weekday`, `saturday`, etc.).
 5. **Merged with `trips.txt`** to get `route_id`, `direction_id`, and shape ID.
 6. **Handled anomalies** like missing values and duplicated trips.
-7. **Saved the final DataFrame** as `gtfs_cleaned.parquet`.
+7. **Saved the final DataFrame** as `gtfs_cleaned.csv`.
 
-### 🧾 Main Cleaned File: `gtfs_cleaned.parquet`
+### 🧾 Main Cleaned File: `gtfs_cleaned.csv`
 | Feature               | Description                         |
 |------------------------|-------------------------------------|
 | trip_id               | Unique trip reference               |
@@ -53,10 +53,9 @@ An interactive UI for users to:
 - Choose hour of the day
 - Predict travel time using trained ML model
 - View metro stops and congestion heatmap on **Folium (OpenStreetMap)**
-- Visualize route paths based on `shapes.txt`
 - Display signal points and their status
 
-### 🗺 Dashboard Features:
+###  Dashboard Features:
 
 | Feature | Description |
 |--------|-------------|
@@ -72,8 +71,7 @@ An interactive UI for users to:
 - `streamlit`
 - `folium`
 - `streamlit_folium`
-- `pandas`, `joblib` (for loading model)
-- `geopy` (optional: for user coordinates)
+- `pandas`, `joblib` 
 
 ---
 
@@ -82,17 +80,7 @@ An interactive UI for users to:
 You can containerize and deploy the app using Docker:
 
 ###  Dockerfile
+docker build -t delhi-traffic-app .
+docker run -p 8501:8501 delhi-traffic-app
 
-```dockerfile
-FROM python:3.12-slim
 
-WORKDIR /app
-
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
-
-COPY . .
-
-EXPOSE 8501
-
-CMD ["streamlit", "run", "dashboard/dashboard.py", "--server.port=8501", "--server.address=0.0.0.0"]
