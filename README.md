@@ -40,13 +40,13 @@ All GTFS `.txt` files were processed using pandas in a Jupyter notebook:
 | hour                  | Extracted from time for patterning  |
 | shape_dist_traveled   | Distance covered on shape route     |
 
-```###  Libraries Used (Preprocessing):
-import pandas as pd
-from datetime import timedelta
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error
-import matplotlib.pyplot as plt```
+###  Libraries Used (Preprocessing):
+- `import pandas as pd`
+- `from datetime import timedelta`
+- `from sklearn.model_selection import train_test_split`
+- `from sklearn.ensemble import RandomForestRegressor`
+- `from sklearn.metrics import mean_absolute_error`
+- `import matplotlib.pyplot as plt`
 
 ---
 
