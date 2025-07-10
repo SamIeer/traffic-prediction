@@ -1,4 +1,4 @@
-# Delhi Traffic Prediction using GTFS & OpenStreetMap
+# Delhi Traffic Prediction  & OpenStreetMap
 
 A machine learning-powered system to predict travel time. It visualizes live congestion, stop-to-stop delay, and optimal routes using interactive maps and charts.
 
