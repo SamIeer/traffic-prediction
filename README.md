@@ -34,7 +34,6 @@ All GTFS `.txt` files were processed using pandas in a Jupyter notebook:
 | arrival_time / dep.   | Timestamps from stop_times.txt      |
 | stop_lat / stop_lon   | From stops.txt                      |
 | travel_time_sec       | Time between current and next stop  |
-| route_id              | Metro line ID                       |
 | direction_id          | Direction (0 or 1)                  |
 | service_id            | weekday/weekend/saturday            |
 | hour                  | Extracted from time for patterning  |
