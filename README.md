@@ -40,11 +40,13 @@ All GTFS `.txt` files were processed using pandas in a Jupyter notebook:
 | hour                  | Extracted from time for patterning  |
 | shape_dist_traveled   | Distance covered on shape route     |
 
-###  Libraries Used (Preprocessing):
-- `pandas`, `numpy`
-- `datetime`, `pyarrow`
-- `sklearn.model_selection`, `sklearn.ensemble.RandomForestRegressor`
-- `matplotlib.pyplot` (for visual EDA)
+```###  Libraries Used (Preprocessing):
+import pandas as pd
+from datetime import timedelta
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error
+import matplotlib.pyplot as plt```
 
 ---
 
@@ -71,10 +73,12 @@ An interactive UI for users to:
 | **Route Visualizer** | Draws routes using `shapes.txt` |
 
 ### Libraries Used (Dashboard):
-- `streamlit`
-- `folium`
-- `streamlit_folium`
-- `pandas`, `joblib` 
+- `import streamlit as st`
+- `import folium`
+- `from folium.plugins import HeatMap`
+- `from streamlit_folium import st_folium`
+- `import pandas as pd`
+
 
 ---
 
@@ -82,6 +86,6 @@ An interactive UI for users to:
 
 You can containerize and deploy the app using Docker:
 
-###  Dockerfile
+```###  Dockerfile
 docker build -t delhi-traffic-app .
-docker run -p 8501:8501 delhi-traffic-app
+docker run -p 8501:8501 delhi-traffic-app```
