@@ -85,27 +85,3 @@ You can containerize and deploy the app using Docker:
 ###  Dockerfile
 docker build -t delhi-traffic-app .
 docker run -p 8501:8501 delhi-traffic-app
-
-traffic-prediction/
-│
-├── data/
-│   ├── stops.txt
-│   ├── stop_times.txt
-│   ├── routes.txt
-│   ├── trips.txt
-│   ├── shapes.txt
-│   └── gtfs_cleaned.parquet
-│
-├── notebooks/
-│   └── preprocessing_modeling.ipynb
-│
-├── dashboard.py
-│  
-│
-├── models/
-│   └── rf_model.pkl
-│
-├── requirements.txt
-├── Dockerfile
-└── README.md
-
