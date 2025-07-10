@@ -80,6 +80,24 @@ An interactive UI for users to:
 
 
 ---
+```### Installation setup 
+# 1. Clone the repository
+git clone https://github.com/SamIeer/traffic-prediction.git
+cd traffic-prediction
+
+# 2. Create a virtual environment (optional but recommended)
+python -m venv venv
+# On Windows
+venv\Scripts\activate
+# On macOS/Linux
+source venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Launch Jupyter Notebook (if applicable)
+jupyter notebook
+```
 
 ##  Docker Support
 
@@ -87,4 +105,5 @@ You can containerize and deploy the app using Docker:
 
 ```###  Dockerfile
 docker build -t delhi-traffic-app .
-docker run -p 8501:8501 delhi-traffic-app```
+docker run -p 8501:8501 delhi-traffic-app 
+```
