@@ -54,10 +54,10 @@ All GTFS `.txt` files were processed using pandas in a Jupyter notebook:
 
 An interactive UI for users to:
 
-- Select source and destination metro stations
+- Select source and destination 
 - Choose hour of the day
 - Predict travel time using trained ML model
-- View metro stops and congestion heatmap on **Folium (OpenStreetMap)**
+- View  stops and congestion heatmap on **Folium (OpenStreetMap)**
 - Display signal points and their status
 
 ###  Dashboard Features:
