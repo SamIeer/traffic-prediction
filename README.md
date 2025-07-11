@@ -6,7 +6,7 @@ A machine learning-powered system to predict travel time. It visualizes live con
 
 ##  Project Description
 
-This project uses **General Transit Feed Specification (GTFS)** datasets (stops, stop_times, trips, routes, shapes) to build a **Random Forest-based model** for travel time prediction across metro stops in Delhi. The final outcome is an interactive **Streamlit dashboard** using **Folium** maps, travel estimations, and route visuals.
+This project uses **General Transit Feed Specification (GTFS)** datasets (stops, stop_times, trips, routes, shapes) to build a **Random Forest-based model** for travel time prediction across  Delhi. The final outcome is an interactive **Streamlit dashboard** using **Folium** maps, travel estimations, and route visuals.
 
 <img width="1094" height="595" alt="skshoort" src="https://github.com/user-attachments/assets/99820d5b-674f-417b-9215-0a8f537af09f" />
 
