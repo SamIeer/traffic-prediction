@@ -1,21 +1,30 @@
 import streamlit as st
 import folium
-from folium.plugins import HeatMap
+from folium.plugins import HeatMap, FastMarkerCluster
 from streamlit_folium import st_folium
 import pandas as pd
+import matplotlib.colors as mcolors
 
-cleaned = pd.read_csv("Dataset\gtfs_cleaned.csv")
-
-# ---- UI Setup ----
+# ---- CONFIG ----
 st.set_page_config(layout="wide")
-st.title(" Traffic Prediction Dashboard")
+st.title("🚦 Delhi Traffic Prediction Dashboard")
 
+# ---- LOAD & CACHE DATA ----
+@st.cache_data
+def load_cleaned():
+    df = pd.read_csv("Dataset/gtfs_cleaned.csv")  # Replace with your path
+    return df
+
+cleaned = load_cleaned()
+
+# ---- UI LAYOUT ----
 left, right = st.columns([2, 3])
 
-# ---- Left Panel: Inputs and Charts ----
+# ---- LEFT PANEL ----
 with left:
-    st.header("Plan a Route")
+    st.header("📍 Plan a Route")
 
+    # Unique Stops
     stop_names = cleaned[['stop_id', 'stop_lat', 'stop_lon', 'stop_name']].drop_duplicates().reset_index(drop=True)
 
     stop_dict = {
@@ -38,43 +47,63 @@ with left:
                 src_time = route_df[route_df['stop_id'] == src]['arrival_sec'].values[0]
                 dst_time = route_df[route_df['stop_id'] == dst]['arrival_sec'].values[0]
                 predicted = abs(dst_time - src_time) // 60
-                st.success(f"🚇 Estimated Travel Time: {predicted} minutes")
+                st.success(f"🕒 Estimated Travel Time: {predicted} minutes")
             except:
-                st.warning("❌ Could not calculate — data might be missing.")
+                st.warning("⚠️ Could not calculate — missing time data.")
         else:
             st.warning("⚠️ No matching route found at this hour.")
 
-    # Chart
+    # ---- Chart: Avg Travel Time by Hour ----
     st.subheader("📊 Avg Travel Time per Hour")
-    avg_hourly = cleaned.groupby('hour_of_day')['travel_time_sec'].mean().reset_index()
-    st.line_chart(avg_hourly.rename(columns={'travel_time_sec': 'Avg Travel Time (s)'}))
+    hourly_avg = cleaned.groupby('hour_of_day')['travel_time_sec'].mean().reset_index()
+    st.line_chart(hourly_avg.rename(columns={'travel_time_sec': 'Avg Travel Time (s)'}))
 
-# ---- Right Panel: Folium Map with Stops + Heatmap ----
+# ---- RIGHT PANEL ----
 with right:
-    st.header("Interactive  Route Map")
+    st.header("🗺️ Interactive Route Map")
 
     delhi_map = folium.Map(location=[28.6139, 77.2090], zoom_start=12)
 
-    # Add stop points
-    for _, row in cleaned.iterrows():
-        if pd.notnull(row['stop_lat']) and pd.notnull(row['stop_lon']):
-            folium.CircleMarker(
-                location=[row['stop_lat'], row['stop_lon']],
-                radius=3,
-                color='blue',
-                fill=True,
-                fill_opacity=0.7,
-                popup=f"Stop ID: {row['stop_id']}, Trip: {row['trip_id']}"
-            ).add_to(delhi_map)
+    # ---- Marker Clusters ----
+    map_points = cleaned[['stop_lat', 'stop_lon']].dropna().drop_duplicates()
+    map_sample = map_points.sample(n=min(1000, len(map_points)), random_state=42)
+    marker_data = [(row['stop_lat'], row['stop_lon']) for _, row in map_sample.iterrows()]
+    FastMarkerCluster(marker_data).add_to(delhi_map)
 
-    # Add heatmap (ensure no NaNs)
+    # ---- Heatmap ----
     avg_tt = cleaned.groupby(['stop_lat', 'stop_lon'])['travel_time_sec'].mean().reset_index()
-    heat_data = [
-        [row['stop_lat'], row['stop_lon'], row['travel_time_sec']] 
-        for _, row in avg_tt.iterrows() 
-        if pd.notnull(row['stop_lat']) and pd.notnull(row['stop_lon'])
-    ]
+    heat_data = avg_tt.dropna()[['stop_lat', 'stop_lon', 'travel_time_sec']].values.tolist()
     HeatMap(heat_data, radius=15, blur=10).add_to(delhi_map)
 
-    # Render map
-    st_folium(delhi_map, width=800, height=600)
+    # ---- Route PolyLines ----
+    st.subheader("🛤️ Display Route Lines")
+
+    available_routes = cleaned[['trip_id']].dropna().drop_duplicates().sort_values('trip_id')
+    selected_routes = st.multiselect("Select Routes", available_routes['trip_id'], default=available_routes['trip_id'].tolist()[:3])
+
+    # Assign colors to routes
+    route_colors = list(mcolors.TABLEAU_COLORS.values())
+    route_color_map = {rid: route_colors[i % len(route_colors)] for i, rid in enumerate(available_routes['trip_id'])}
+
+    for route in selected_routes:
+        route_trips = cleaned[cleaned['trip_id'] == route]
+        if route_trips.empty:
+            continue
+
+        stop_id = route_trips['stop_id'].dropna().unique()
+        if len(stop_id) == 0:
+            continue
+
+        stop_id = stop_id[0]
+        shape_data = route_trips[route_trips['stop_id'] == stop_id].sort_values('stop_sequence')
+        shape_points = shape_data[['stop_lat', 'stop_lon']].dropna().values.tolist()
+
+        folium.PolyLine(
+            locations=shape_points,
+            color=route_color_map[route],
+            weight=4,
+            popup=f"Route ID: {route}"
+        ).add_to(delhi_map)
+
+    # ---- Display Map ----
+    st_data = st_folium(delhi_map, width=800, height=600)
