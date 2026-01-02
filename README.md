@@ -1,148 +1,211 @@
-# Delhi Traffic Prediction  & OpenStreetMap
+# 🚦 Delhi Traffic Prediction & Route Analysis (OpenStreetMap)
 
-A machine learning-powered system to predict travel time. It visualizes live congestion, stop-to-stop delay, and optimal routes using interactive maps and charts.
+A **research-oriented traffic analysis and route visualization system for Delhi** using **OpenStreetMap, TomTom APIs, and Streamlit**.
 
----
-
-##  Project Description
-
-This project leverages Large Language Models (LLMs) via Groq to enhance the experience of travel time prediction and traffic insights across Delhi. Using curated datasets, it integrates predictive modeling with an interactive Streamlit dashboard, featuring Folium-based maps, real-time travel estimations, and intuitive route visualizations for a smoother and smarter user experience.
-
-<img width="1279" height="628" alt="Screenshot (120)" src="https://github.com/user-attachments/assets/f9da63d5-e1c8-4033-9392-5246c1982b2d" />
-
-
+This project focuses on **route planning, traffic delay analysis, and explainable experimentation with machine learning**, rather than claiming production-grade traffic prediction.
 
 ---
 
-##  Data Preprocessing & Feature Engineering
+## 📌 Project Overview
 
-All GTFS `.txt` files were processed using pandas in a Jupyter notebook:
+This project provides an interactive dashboard that allows users to:
 
-###  Steps Involved:
-1. **Merged `stop_times.txt` with `stops.txt`** to get latitude/longitude and timestamps.
-2. **Sorted by `trip_id` and `stop_sequence`** to ensure sequential travel.
-3. **Calculated `travel_time_sec`** between consecutive stops.
-4. **Extracted time features**: hour of day, service type (`weekday`, `saturday`, etc.).
-5. **Merged with `trips.txt`** to get `route_id`, `direction_id`, and shape ID.
-6. **Handled anomalies** like missing values and duplicated trips.
-7. **Saved the final DataFrame** as `gtfs_cleaned.csv`.
-
-###  Main Cleaned File: `gtfs_cleaned.csv`
-| Feature               | Description                         |
-|------------------------|-------------------------------------|
-| trip_id               | Unique trip reference               |
-| stop_sequence         | Order of stop in trip               |
-| arrival_time / dep.   | Timestamps from stop_times.txt      |
-| stop_lat / stop_lon   | From stops.txt                      |
-| travel_time_sec       | Time between current and next stop  |
-| direction_id          | Direction (0 or 1)                  |
-| service_id            | weekday/weekend/saturday            |
-| hour                  | Extracted from time for patterning  |
-| shape_dist_traveled   | Distance covered on shape route     |
-
-###  Libraries Used (Preprocessing):
-```
-import pandas as pd
-from datetime import timedelta
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error
-import matplotlib.pyplot as plt
-```
----
-
-##  Streamlit Dashboard
-
-<h3>Left Panel:</h3> Trip planner (source, destination, transport mode, traffic toggle) + LLM Travel Plan.
-
-<h3>Right Panel:</h3> Interactive map showing the selected route.
-
-An interactive UI for users to:
-
-- Select source and destination 
-- Predict travel time using trained ML model and LLM advisory 
-- View  the routes  on **Folium (OpenStreetMap)**
-- Display signal points and their status
-- Option for selecting mode of transport 
-
-###  Dashboard Features:
-| Feature | Description |
-|---------|-------------|
-| **Folium Map** | OpenStreetMap centered on Delhi |
-| **Stop Info** | Hover to view arrival/departure time |
-| **Prediction Box** | Select source → destination → plan |
-| **TomTom Routing API** | Provides optimized routes, travel time, distance, and real-time traffic delays |
-| **OpenWeather API** | Fetches temperature and weather conditions for the journey |
-| **LLM (Groq) insights** | Generates a natural language summary with:<br>• Travel time & distance<br>• Expected traffic congestion hotspots<br>• Weather impact<br>• Suggestions (e.g., leave early, precautions) |
-
-### Libraries Used (Dashboard):
-```
-import streamlit as st
-import folium
-from streamlit_folium import st_folium
-import requests
-import pandas as pd
-from dotenv import load_dotenv
-
-# APIs
-
-from services.tomtom_service import geocode_tomtom, route_tomtom
-(https://developer.tomtom.com/)
-
-from services.weather_service import weather_onecall
-(https://openweathermap.org/)
-
-from services.llm_service import ask_llm
-(https://console.groq.com/home)
-
-```
+- Select a **source and destination** in Delhi
+- Visualize routes on **OpenStreetMap (Folium)**
+- Fetch real routing data (distance, ETA, traffic delay) from **TomTom**
+- Generate a **natural-language travel advisory** using an LLM
+- Experiment with **ML-based traffic classification** (research / experimental)
 
 ---
-## Installation setup 
-```
-# 1. Clone the repository
+
+## ⚠️ Important Note
+
+The current machine-learning model is **experimental** and **not used as the single source of truth** for traffic visualization.
+
+- Routing, ETA, and delay values come from **TomTom APIs**
+- ML outputs are used **only for research and analysis**, not for live traffic decisions
+
+---
+
+## 🧠 System Architecture
+
+User Input (Source, Destination, Mode)
+↓
+TomTom Geocoding API
+↓
+TomTom Routing API (real road data)
+↓
+• Distance
+• ETA
+• Traffic Delay
+↓
+OpenWeather API → Weather context
+↓
+LLM (Groq) → Travel advisory (text)
+↓
+Folium + Streamlit → Interactive Map UI
+
+
+The ML component runs **in parallel** for experimentation and analysis.
+
+---
+
+## 📊 Data Preprocessing & Feature Engineering
+
+GTFS (General Transit Feed Specification) data is used **only for ML experimentation**, not for live road traffic.
+
+### Steps Performed
+
+- Merged `stop_times.txt` with `stops.txt`
+- Sorted by `trip_id` and `stop_sequence`
+- Computed `travel_time_sec` between stops
+- Extracted temporal features:
+  - Hour of day
+  - Service type (weekday / weekend)
+- Joined `trips.txt` for route and direction metadata
+- Cleaned anomalies and missing values
+- Saved cleaned data as `gtfs_cleaned.csv`
+- Created heuristic labels → `gtfs_labeled.csv`
+
+---
+
+## 📁 Key Files
+
+| File | Purpose |
+|----|--------|
+| `gtfs_cleaned.csv` | Cleaned GTFS dataset |
+| `gtfs_labeled.csv` | Heuristically labeled traffic data |
+| `traffic_rf_model.pkl` | Experimental ML model |
+| `label_encoder.pkl` | Label encoder |
+
+---
+
+## ⚠️ Known Limitation
+
+GTFS speeds represent **metro schedules**, not **road congestion**.  
+This makes the ML model **unsuitable for real traffic prediction** without additional road-based features.
+
+---
+
+## 🤖 Machine Learning (Experimental)
+
+### Model
+- `RandomForestClassifier`
+- Trained on **GTFS-derived features**
+
+### Purpose
+- Academic exploration
+- Understanding feature impact
+- **Not production traffic prediction**
+
+### Known Issues
+- Over-predicts **Heavy traffic**
+- Learns unrealistic speed distributions
+- Not aligned with real road conditions
+
+### Current Status
+
+- ✅ Trained
+- ⚠️ Experimental
+- ❌ Not used for live route coloring
+
+---
+
+## 🗺️ Streamlit Dashboard
+
+### Left Panel
+- Source & destination input
+- Mode of transport (car / bicycle / pedestrian)
+- LLM-generated travel advisory
+
+### Right Panel
+- Interactive OpenStreetMap view
+- Stable route polyline (no blinking)
+- Source and destination markers
+
+---
+
+## 🔗 Data Sources
+
+| Component | Source |
+|-------|--------|
+| Routing | TomTom Routing API |
+| Geocoding | TomTom Search API |
+| Weather | OpenWeather API |
+| Advisory | Groq LLM |
+| Map | OpenStreetMap (Folium) |
+
+---
+
+## 📦 Installation & Setup
+
+```bash
+# Clone repository
 git clone https://github.com/SamIeer/traffic-prediction.git
 cd traffic-prediction
 
-# 2. Create a virtual environment (optional but recommended)
+# Create virtual environment
 python -m venv venv
-# On Windows
-venv\Scripts\activate
-# On macOS/Linux
-source venv/bin/activate
+venv\Scripts\activate      # Windows
+source venv/bin/activate  # Linux/Mac
 
-# 3. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 4. Launch Jupyter Notebook (if applicable)
-jupyter notebook
+# Run the app
+streamlit run app.py
+
+---
+
+## Docker
+
+Before building the image, check that Docker is installed and the daemon is running:
+
+```bash
+# Check Docker installation
+docker --version
+# Check Docker daemon (will error if daemon is not running)
+docker info
 ```
 
-##  Docker Support
+You can containerize and deploy the app using Docker. Build the image from the project root and run the container with Streamlit's default port (8501) exposed.
 
-You can containerize and deploy the app using Docker:
-
-```###  Dockerfile
+```bash
+# Build the Docker image (run from project root)
 docker build -t delhi-traffic-app .
-docker run -p 8501:8501 delhi-traffic-app 
+
+# Run the container, mapping Streamlit's port 8501 to your host
+docker run --rm -p 8501:8501 delhi-traffic-app
+
+# Optional: run detached
+# docker run -d --rm -p 8501:8501 delhi-traffic-app
 ```
 
-###Project structure 
-```
+**Notes:**
+
+- Ensure Streamlit inside the container is configured to listen on `0.0.0.0` (not just `localhost`). You can set this via environment variable or Streamlit config: `STREAMLIT_SERVER_ADDRESS=0.0.0.0`.
+- Pass secrets (API keys) securely with `--env-file` or `-e` when running the container, or use a secrets manager for production.
+- For multi-service setups, see `docker-compose.yml`.
+
+## Project Structure
 traffic-prediction/
-│── streamlit_app.py # Main Streamlit application
-│── Dataset # folder for the dataset 
+│── app.py                     # Streamlit application
+│── Dataset/
+│   ├── raw/
+│   ├── processed/
+│   └── gtfs_labeled.csv
 │
-│── services/ # API service integrations
-│ ├── tomtom_service.py # Functions for TomTom Geocoding & Routing
-│ ├── weather_service.py # Functions for OpenWeather API
-| ├── llm_service.py # Functions for Grok API
+│── ML/
+│   ├── train_rf.py
+│   ├── create_labels.py
+│   ├── traffic_rf_model.pkl
+│   └── label_encoder.pkl
 │
-│── .gitignore # Ignored files for Git
-│── docker-compose.yml # Docker Compose setup
-│── Dockerfile # Docker image setup
-│── requirements.txt # Python dependencies
-│── README.md # Project documentation
-```
-BUILD WITH HEART --
-LETS BUILD and MAKE CHANGE --
+│── services/
+│   ├── tomtom_service.py
+│   ├── weather_service.py
+│   └── llm_service.py
+│
+│── Dockerfile
+│── requirements.txt
+│── README.md

@@ -1,52 +1,126 @@
 import os
 import requests
 from dotenv import load_dotenv
+from urllib.parse import quote
 
-load_dotenv(dotenv_path="secrets.env")
+# --------------------------------------------------
+# ENV SETUP
+# --------------------------------------------------
+load_dotenv("secrets.env")
 TOMTOM_KEY = os.getenv("TOMTOM_API_KEY")
 
-def geocode_tomtom(query: str, country="IN"):
-    """Geocode a location name into (lat, lon) using TomTom API."""
-    url = f"https://api.tomtom.com/search/2/geocode/{requests.utils.quote(query)}.json"
-    params = {"key": TOMTOM_KEY, "limit": 1, "countrySet": country}
+if not TOMTOM_KEY:
+    raise RuntimeError("❌ TOMTOM_API_KEY not found in secrets.env")
+
+
+# --------------------------------------------------
+# AUTOCOMPLETE (Google-Maps-like suggestions)
+# --------------------------------------------------
+def autocomplete_places(query: str, country="IN", limit=5):
+    """
+    Returns list of place suggestions:
+    [{label, lat, lon}]
+    """
+    if not query or len(query) < 2:
+        return []
+
+    url = "https://api.tomtom.com/search/2/search.json"
+    params = {
+        "key": TOMTOM_KEY,
+        "query": query,
+        "limit": limit,
+        "countrySet": country,
+        "typeahead": True
+    }
 
     try:
-        r = requests.get(url, params=params, timeout=15)
+        r = requests.get(url, params=params, timeout=10)
         r.raise_for_status()
-        js = r.json()
-        if js.get("results"):
-            pos = js["results"][0]["position"]
+        results = []
+
+        for item in r.json().get("results", []):
+            addr = item.get("address", {})
+            pos = item.get("position", {})
+
+            if "lat" in pos and "lon" in pos:
+                results.append({
+                    "label": addr.get("freeformAddress", "Unknown"),
+                    "lat": pos["lat"],
+                    "lon": pos["lon"]
+                })
+
+        return results
+
+    except requests.RequestException:
+        return []
+
+
+# --------------------------------------------------
+# GEOCODING (fallback if autocomplete not used)
+# --------------------------------------------------
+def geocode_tomtom(query: str, country="IN"):
+    """
+    Convert place name → (lat, lon)
+    """
+    url = f"https://api.tomtom.com/search/2/geocode/{quote(query)}.json"
+    params = {
+        "key": TOMTOM_KEY,
+        "limit": 1,
+        "countrySet": country
+    }
+
+    try:
+        r = requests.get(url, params=params, timeout=10)
+        r.raise_for_status()
+        results = r.json().get("results", [])
+
+        if results:
+            pos = results[0]["position"]
             return float(pos["lat"]), float(pos["lon"])
-    except requests.RequestException as e:
-        print(f"❌ Geocoding error: {e}")
+
+    except requests.RequestException:
+        pass
+
     return None
 
 
-def route_tomtom(start_lat, start_lon, end_lat, end_lon, mode="car", traffic=True):
-    """Get route summary + polyline points from TomTom Routing API."""
+# --------------------------------------------------
+# ROUTING
+# --------------------------------------------------
+def route_tomtom(
+    start_lat: float,
+    start_lon: float,
+    end_lat: float,
+    end_lon: float,
+    mode="car",
+    traffic=True
+):
+    """
+    Returns route summary + polyline points
+    """
     coord_str = f"{start_lat},{start_lon}:{end_lat},{end_lon}"
     url = f"https://api.tomtom.com/routing/1/calculateRoute/{coord_str}/json"
+
     params = {
         "key": TOMTOM_KEY,
         "travelMode": mode,
         "traffic": str(traffic).lower(),
-        "routeRepresentation": "polyline",
+        "routeRepresentation": "polyline"
     }
 
     try:
-        r = requests.get(url, params=params, timeout=20)
+        r = requests.get(url, params=params, timeout=15)
         r.raise_for_status()
-        js = r.json()
-        routes = js.get("routes", [])
+        routes = r.json().get("routes", [])
+
         if not routes:
             return None
 
-        best = routes[0]
-        summary = best.get("summary", {})
+        route = routes[0]
+        summary = route.get("summary", {})
 
-        # Gather all points along the route
         points = []
-        for leg in best.get("legs", []):
+        for leg in route.get("legs", []):
             for p in leg.get("points", []):
                 points.append((p["latitude"], p["longitude"]))
 
@@ -56,8 +130,8 @@ def route_tomtom(start_lat, start_lon, end_lat, end_lon, mode="car", traffic=Tru
             "time_s": summary.get("travelTimeInSeconds"),
             "delay_s": summary.get("trafficDelayInSeconds", 0),
             "departureTime": summary.get("departureTime"),
-            "arrivalTime": summary.get("arrivalTime"),
+            "arrivalTime": summary.get("arrivalTime")
         }
-    except requests.RequestException as e:
-        print(f"❌ Routing error: {e}")
+
+    except requests.RequestException:
         return None
